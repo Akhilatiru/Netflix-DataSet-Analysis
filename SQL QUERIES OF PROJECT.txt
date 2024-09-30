@@ -1,0 +1,205 @@
+--SQL QUERIES FOR NETFLIX DATASET
+
+
+--1.Top 10 years with the highest number of movies released.
+
+WITH moviecount AS (
+SELECT Release_year, COUNT(*) AS NumberofMovies
+FROM raw_titles
+WHERE type = 'MOVIE'
+GROUP BY Release_year
+)
+SELECT Release_year, NumberofMovies
+FROM moviecount
+ORDER BY NumberofMovies DESC
+LIMIT 10;
+
+--2.Average IMDB Score for Movies and Shows.
+
+SELECT 'Movie' AS Type, AVG(Imdb_score) AS Averagescore
+FROM raw_titles
+WHERE Type = ‘MOVIE’
+UNION ALL
+SELECT 'Show' AS Type, AVG(Imdb_score) AS Averagescore
+FROM raw_titles
+WHERE Type = ‘SHOW’;
+
+--3.List of Best Movies by Year in Each Genre Category.
+	
+SELECT Main_genre, COUNT (*) AS numberofmovies
+FROM BestMoviesByYear
+GROUP BY Main_genre
+ORDER BY numberofmovies DESC;
+
+--4.Top 10 movies with highest number of actors in it.
+
+SELECT rt.Title AS movietitle, COUNT(DISTINCT rc.Name) AS numberofactors
+FROM raw_titles rt
+JOIN raw_credits rc ON rt.ID = rc.ID
+where Type='MOVIE' AND Role='ACTOR'
+GROUP BY rt.Title
+ORDER BY numberofactors DESC
+LIMIT 10;
+
+--5.Popular Genres from Netflix’s Best Movie Category.
+
+SELECT main_genre, SUM(number_of_votes) AS totalvotes
+FROM BestMoviesNetflix
+GROUP BY main_genre
+ORDER BY totalvotes DESC;
+
+--6.Top 5 Actors with highest appearances in Movies and Shows.
+
+(SELECT Name AS PersonName, COUNT(*) AS moviecount, 'Movie' AS Type
+FROM raw_credits 
+WHERE Role = 'ACTOR' AND ID IN (SELECT ID FROM raw_titles WHERE Type = 'MOVIE')
+GROUP BY Name
+ORDER BY moviecount DESC
+LIMIT 5)
+UNION ALL
+(SELECT Name AS PersonName, COUNT(*) AS showcount, 'Show' AS Type
+FROM raw_credits 
+WHERE Role = 'ACTOR' AND ID IN (SELECT ID FROM raw_titles WHERE Type = 'SHOW')
+GROUP BY Name
+ORDER BY showcount DESC
+LIMIT 5);
+
+--7.Top 10 directors whose movies made it to ‘Best Movies Netflix’ category:
+
+SELECT COUNT(*) AS numberofmovies, rc.Name AS directorname
+FROM raw_credits AS rc
+JOIN BestMoviesNetflix bm ON rc.ID = bm.ID AND Role='DIRECTOR'
+GROUP BY rc.Name
+ORDER BY numberofmovies DESC
+LIMIT 10;
+
+--8.Top 10 Directors who got highest Imdb Ratings overall for their Movies:
+
+SELECT rc.Name AS directorname, MAX(rt.imdb_score) AS maximumscore
+FROM raw_titles rt
+JOIN raw_credits rc ON rc.ID = rt.ID
+WHERE rc.Role = 'DIRECTOR' AND rt.Type = 'MOVIE' AND rt.Imdb_score IS NOT NULL
+GROUP BY rc.name
+ORDER BY maximumscore DESC
+LIMIT 10;
+
+--9.Top 10 shows with highest number of seasons
+
+SELECT Title, Seasons
+FROM raw_titles
+WHERE Type = 'SHOW'
+ORDER BY Seasons DESC
+LIMIT 10;
+
+--10.Average Runtime for Movies and Shows
+
+(SELECT AVG(runtime) AS avgruntimeinmins, 'Movie' AS Type
+FROM raw_titles
+WHERE Type = 'MOVIE')
+union all
+(SELECT AVG(runtime) AS avgruntimeinmins, 'Show' AS Type
+FROM raw_titles
+WHERE Type = 'SHOW');
+
+--11.Top 10 Production Countries with highest count of Genres in their Best Movie category:
+
+SELECT Main_production as ProductionCountry, COUNT(DISTINCT Main_genre) AS numofgenres
+FROM BestMoviesNetflix
+GROUP BY Main_production
+ORDER BY numofgenres DESC
+LIMIT 10;
+
+--12.Top 10 movies with highest Imdb scores which are under 60 minutes duration.
+
+SELECT Title, Imdb_score
+FROM raw_titles 
+WHERE Runtime<=60 AND Type='MOVIE' AND Imdb_score IS NOT NULL
+ORDER BY Imdb_Score DESC
+LIMIT 10;
+
+--13.Top 10 release years with highest cumulative IMDB scores for movies.
+
+SELECT Release_year,ROUND(SUM(Imdb_score)::numeric, 2) AS cumulativescore
+FROM raw_titles
+WHERE Type = 'MOVIE'
+GROUP BY Release_year
+ORDER BY cumulativescore DESC
+LIMIT 10;
+
+--14.Movies awarded as best in the documentary genre on Netflix but not awarded as the best show by year.
+
+SELECT Title, Score FROM BestShowsNetflix WHERE Main_genre ='documentary'
+EXCEPT 
+SELECT Title, Score FROM BestShowsByYear WHERE Main_genre = 'documentary';
+
+--15.Top-ranked movies from the best Movies in Netflix based on IMDB scores, within each genre.
+
+SELECT Title, Main_genre, Score
+FROM (
+    SELECT Title, Main_genre, Score,
+    ROW_NUMBER () OVER (PARTITION BY Main_genre ORDER BY Score DESC ) AS Rank
+    FROM BestMoviesNetflix
+) AS rankedmovies
+WHERE Rank=1;
+
+--16.Movies released between 2021 and 2022 along with the name of the director under Best Movie Category in Netflix.
+
+SELECT bm.Title,rc.Name
+FROM raw_credits AS rc
+JOIN BestMoviesByYear AS bm ON rc.ID = bm.ID 
+WHERE Release_year <= 2022 AND Release_year >=2021 AND rc.Role = 'DIRECTOR';
+
+--17.Best Comedy Shows with an episode runtime of 25minutes or less than on Netflix.
+
+SELECT Title 
+FROM BestShowsByYear 
+WHERE Main_genre = 'comedy'
+INTERSECT 
+SELECT Title 
+FROM raw_titles 
+WHERE Runtime <= 25 AND Type = 'SHOW';
+
+--18.Top 10 directors whose movies has the highest runtimes:
+
+SELECT rc.Name , rt.Runtime 
+FROM raw_credits AS rc
+JOIN raw_titles AS rt ON rc.ID = rt.ID 
+WHERE rt.Type = 'MOVIE'and rc.Role='DIRECTOR'
+ORDER BY rt.Runtime DESC
+LIMIT 10;
+
+--19.Names of the Actors whose movies were released before 1980.
+
+SELECT DISTINCT rc.Name, rt.Release_year
+FROM raw_credits AS rc
+JOIN raw_titles AS rt ON rc.ID = rt.ID
+WHERE rt.type = 'SHOW' 
+AND Release_year<1980
+AND rc.Role = 'ACTOR'
+ORDER BY Release_year;
+
+--20.Production Countries with Highest number of movies and shows produced.
+
+(SELECT Production_Countries, COUNT(*) AS NumofMovies, 'MOVIE' AS Type
+FROM raw_titles
+WHERE Type = 'MOVIE' AND Production_Countries IS NOT NULL
+GROUP BY Production_Countries
+ORDER BY NumofMovies DESC
+LIMIT 2) 
+UNION ALL 
+(SELECT Production_Countries, COUNT(*) AS NumofMovies, 'SHOW' AS Type
+FROM raw_titles
+WHERE Type = 'SHOW' AND Production_Countries IS NOT NULL
+GROUP BY Production_Countries
+ORDER BY NumofMovies DESC
+LIMIT 2);
+
+
+
+
+
+
+
+
+
+

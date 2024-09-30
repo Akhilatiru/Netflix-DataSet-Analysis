@@ -1,0 +1,92 @@
+--DDL STATEMENTS FOR NETFLIX DATASET
+
+DROP TABLE IF EXISTS raw_titles; 
+CREATE TABLE raw_titles (
+	ID VARCHAR(100) PRIMARY KEY,
+    	"Index" VARCHAR(20),
+    	Title VARCHAR(255),
+    	Type VARCHAR(255),
+    	Release_year INT,
+    	Age_certification VARCHAR(255),
+    	Runtime INT,
+    	Genres VARCHAR(255),
+    	Production_countries VARCHAR(255),
+    	Seasons VARCHAR(255),
+    	Imdb_Id VARCHAR(255),
+    	Imdb_score FLOAT,
+    	Imdb_votes VARCHAR(255));
+
+
+DROP TABLE IF EXISTS raw_credits;
+CREATE TABLE raw_credits (
+	ID VARCHAR(100) NOT NULL,
+	"Index" VARCHAR(20) UNIQUE,
+	Person_Id VARCHAR(255),
+	Name VARCHAR(255) NOT NULL,
+	Character VARCHAR(255),
+	Actor VARCHAR(255) NOT NULL,
+FOREIGN KEY (ID) REFERENCES raw_titles(ID)
+);
+
+
+DROP TABLE IF EXISTS BestShowsByYear;
+CREATE TABLE BestShowsYear (
+    ID VARCHAR(100),
+    "Index " VARCHAR(20),
+    Title VARCHAR(255) NOT NULL,
+    Release_year INT NOT NULL,
+    Score FLOAT,
+    Number_of_seasons INT,
+    Main_genre VARCHAR(255) NOT NULL,
+    Main_production VARCHAR(255) NOT NULL,
+FOREIGN KEY (ID) REFERENCES raw_titles(ID),
+UNIQUE ("Index")
+);
+
+
+DROP TABLE IF EXISTS BestMoviesByYear;
+CREATE TABLE BestMovieYear (
+	ID VARCHAR(100),
+	"Index" VARCHAR(20) UNIQUE,
+	Title VARCHAR(255) NOT NULL,
+	Release_year INT NOT NULL,
+	Score FLOAT NOT NULL,
+	Main_genre VARCHAR(255) NOT NULL,
+	Main_production VARCHAR(255) NOT NULL,
+FOREIGN KEY (ID) REFERENCES raw_titles(ID)
+UNIQUE ("Index")
+);
+
+
+DROP TABLE IF EXISTS BestShowsNetflix;
+CREATE TABLE BestShowsNetflix (
+	ID VARCHAR(100),
+	“Index” VARCHAR(20) UNIQUE,
+	Title VARCHAR(255) NOT NULL,
+	Release_year INT,
+	Score FLOAT,
+	NUMBER_OF_VOTES INT,
+	Duration INT,
+	Number_of_seasons INT,
+	Main_genre VARCHAR(255) NOT NULL,
+	Main_production VARCHAR(255) NOT NULL,
+FOREIGN KEY (ID) REFERENCES raw_titles(ID)
+UNIQUE ("Index")
+);
+
+
+DROP TABLE IF EXISTS BestMoviesNetiflix;
+CREATE TABLE BestMoviesNetiflix (
+	ID VARCHAR(100),
+	“Index” VARCHAR(20) UNIQUE,
+	Title VARCHAR(255),
+	Release_year INT,
+	Score FLOAT,
+	NUMBER_OF_VOTES INT,
+	Duration INT,
+	Main_genre VARCHAR(255),
+	Main_production VARCHAR(255),
+FOREIGN KEY (ID) REFERENCES raw_titles(ID)
+UNIQUE ("Index")
+);
+

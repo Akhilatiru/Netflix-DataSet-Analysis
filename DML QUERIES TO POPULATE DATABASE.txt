@@ -1,0 +1,17 @@
+--DDL STATEMENTS FOR NETFLIX DATASET
+
+UPDATE BestShowsByYear
+SET ID = raw_titles.ID
+FROM raw_titles WHERE BestShowsByYear.Title =raw_titles.Title ;
+
+UPDATE BestMovieByYear
+SET ID = raw_titles.ID
+FROM raw_titles WHERE BestMovieByYear.Title =raw_titles.title ;
+
+UPDATE BestShowsNetflix
+SET ID = raw_titles.ID
+FROM raw_titles WHERE BestShowsNetflix.Title =raw_titles.title ;
+
+UPDATE BestMoviesNetflix
+SET ID = raw_titles.ID
+FROM raw_titles WHERE BestMoviesNetflix.Title =raw_titles.Title ;
